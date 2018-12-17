@@ -1,5 +1,5 @@
-var colours = ['red','#f3b74a','#28d228','#ffff50','#31dede','blue','purple','pink'];
-var hicolours = ['#ff3939','orange','lime','yellow','cyan','#5a5aff','#ce41ce','#ff8fa2'];
+var colours = ['#B20000','#B27400','#17B200','#D3C41F','#52B4D8','#4947B2','purple','#CE6388'];
+var hicolours = ['#FF0000','#FFA500','#21FF00','#FFFA00','#BFFFFB','#6696FF','#ce41ce','#FF77A7'];
 /*Red, orange, yellow, Green, Cyan, Blue, Purple, Pink*/
 function init()
 {
@@ -44,15 +44,14 @@ function flash()
 }
 function randomFlash()
 {
-
-	//Don't choose the same as the current flashing one.
+	var flashingNum = colours.indexOf(flashing);
+	//Don't choose the same as the current flashing one, or one directly next to it.
 	do
 	{
 		var rand = Math.floor(Math.random()*colours.length);
 		var choice = colours[rand];			
 	}
-	while (choice == flashing);
-	console.log(flashing + " => "+choice)
+	while (choice == flashing || rand == flashingNum - 1 || rand == flashingNum +1);	
 	flashing = choice;
 }
 function unflash(color)
@@ -64,23 +63,28 @@ function unflash(color)
 		elem.css('border-top-color',color)	
 	}
 }
+var score = 0;
 var tickerDirection = 1;
 var tickerDegrees = 0;
 var tickerSpinning = false;
-var tickerDelay = 0;
-var tickerMoves = 0.5;
+var tickerDelay = 1;
+var tickerMoves = 1.6;
+var tickerStart = 1.6;
 function speedUp()
 {
-	tickerMoves += 0.1;
+	//Diminishing returns of speed
+	inc = 1/tickerMoves;
+	tickerMoves += inc;
 }
 function spinTicker(){
+	score = 0;
 	tickerSpinning = true;
 	$('#ticker').removeClass('fail')
 	randomFlash();
 	moveTicker(tickerDelay);
 	updateCount();
 }
-function moveTicker(delay)
+function moveTicker()
 {	
 	tickerDegrees += tickerMoves * tickerDirection;
 	if (tickerDegrees >= 360)
@@ -94,7 +98,7 @@ function moveTicker(delay)
 	tickerTo(tickerDegrees);
 	if(tickerSpinning)
 	{
-		setTimeout(moveTicker,delay,delay)	
+		requestAnimationFrame(moveTicker);
 	}	
 }
 function tickerTo(deg)
@@ -105,10 +109,10 @@ function tickerTo(deg)
 }
 function midFlash(color)
 {
+	$("#middle").stop();
 	$('#middle').css('background',color)
-	setTimeout(function(){
-		$('#middle').css('background','black')
-	},200)
+	var spinTime = (360 / tickerMoves)*20; //Number of milliseconds it will take to complete a revolution.	
+	$("#middle").animate({'backgroundColor':'#000'},spinTime)
 }
 function hit()
 {
@@ -117,9 +121,11 @@ function hit()
 	if (colours[sector] == flashing)
 	{
 		tickerDirection = tickerDirection == 1? -1:1;		
-		midFlash(flashing);
+		hi = hicolours[colours.indexOf(flashing)];
+		midFlash(hi);
 		randomFlash();
 		speedUp();
+		score++;
 		updateCount();
 	}
 	else
@@ -131,11 +137,10 @@ function stop()
 {
 	tickerSpinning = false;
 	$('#ticker').addClass('fail')
-	tickerMoves = 0.5;
-	flashing="none";
+	tickerMoves = tickerStart;
+	flashing="none";	
 	updateCount();
 }
-function updateCount(){
-	var score = Math.round((tickerMoves-0.5)*10);
+function updateCount(){	
 	$('#middle').html(score)
 }
