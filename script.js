@@ -73,7 +73,7 @@ var tickerStart = 1.6;
 function speedUp()
 {
 	//Diminishing returns of speed
-	inc = 1/tickerMoves;
+	inc = 1/(tickerMoves*1.5);
 	tickerMoves += inc;
 }
 function spinTicker(){
@@ -138,6 +138,7 @@ function stop()
 	tickerSpinning = false;
 	$('#ticker').addClass('fail')
 	tickerMoves = tickerStart;
+	unflash(flashing)
 	flashing="none";	
 	updateCount();
 }
