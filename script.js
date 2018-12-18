@@ -1,6 +1,6 @@
 var colours = ['#B20000','#B27400','#17B200','#D3C41F','#52B4D8','#4947B2','purple','#CE6388'];
 var hicolours = ['#FF0000','#FFA500','#21FF00','#FFFA00','#BFFFFB','#6696FF','#ce41ce','#FF77A7'];
-/*Red, orange, yellow, Green, Cyan, Blue, Purple, Pink*/
+
 function init()
 {
 	var spinny = document.getElementById('spinny')
@@ -66,40 +66,52 @@ function unflash(color)
 var score = 0;
 var tickerDirection = 1;
 var tickerDegrees = 0;
-var tickerSpinning = false;
 var tickerDelay = 1;
-var tickerMoves = 1.6;
-var tickerStart = 1.6;
+var tickerSpinning = false;
+var tickerStart = 0.08;
+var tickerSpeed = tickerStart;;
 function speedUp()
 {
 	//Diminishing returns of speed
-	inc = 1/(tickerMoves*1.5);
-	tickerMoves += inc;
+	inc = (1/(score+1)) * 0.04;
+	tickerSpeed += inc;
 }
 function spinTicker(){
+	prevTime = undefined;
 	score = 0;
 	tickerSpinning = true;
 	$('#ticker').removeClass('fail')
 	randomFlash();
-	moveTicker(tickerDelay);
+	moveTicker();
 	updateCount();
 }
+var prevTime;
 function moveTicker()
-{	
-	tickerDegrees += tickerMoves * tickerDirection;
-	if (tickerDegrees >= 360)
-	{
-		tickerDegrees = 0;
+{	var time = new Date().getTime();
+	if (prevTime)
+	{		
+		var delta = time - prevTime;
+		prevTime = time;
+		tickerDegrees += tickerSpeed * tickerDirection * delta;
+		if (tickerDegrees >= 360)
+		{
+			tickerDegrees = 0;
+		}
+		else if (tickerDegrees <= 0)
+		{
+			tickerDegrees = 360;
+		}
+		tickerTo(tickerDegrees);
+		if(tickerSpinning)
+		{
+			requestAnimationFrame(moveTicker)
+		}	
 	}
-	else if (tickerDegrees <= 0)
+	else
 	{
-		tickerDegrees = 360;
-	}
-	tickerTo(tickerDegrees);
-	if(tickerSpinning)
-	{
-		requestAnimationFrame(moveTicker);
-	}	
+		prevTime = time;
+		requestAnimationFrame(moveTicker)
+	}		
 }
 function tickerTo(deg)
 {
@@ -111,7 +123,7 @@ function midFlash(color)
 {
 	$("#middle").stop();
 	$('#middle').css('background',color)
-	var spinTime = (360 / tickerMoves)*20; //Number of milliseconds it will take to complete a revolution.	
+	var spinTime = (360 / tickerSpeed); //Number of milliseconds it will take to complete a revolution.	
 	$("#middle").animate({'backgroundColor':'#000'},spinTime)
 }
 function hit()
@@ -137,7 +149,7 @@ function stop()
 {
 	tickerSpinning = false;
 	$('#ticker').addClass('fail')
-	tickerMoves = tickerStart;
+	tickerSpeed = tickerStart;
 	unflash(flashing)
 	flashing="none";	
 	updateCount();
